@@ -15,6 +15,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        APIService<MoviesResponse>.fetchMovies(from: .topRated)
+            .observeOnUserInitiated()
+            .on(value: { model in
+            print(model)
+        }).start()
+        
         return true
     }
 
