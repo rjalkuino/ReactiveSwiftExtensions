@@ -80,8 +80,10 @@ class APIService<T:Decodable> {
                     sink.send(value: .failure(.invalidEndpoint))
                     return
                 }
-                guard let data = data else { return }
-                
+                guard let data = data else {
+                    sink.send(value: .failure(.invalidResponse))
+                    return
+                }
                 do {
                     let values = try jsonDecoder.decode(T.self, from: data)
                     sink.send(value: .success(values))

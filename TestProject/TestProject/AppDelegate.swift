@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         APIService<MoviesResponse>.fetchMovies(from: .topRated)
             .observeOnUserInitiated()
             .on(value: { model in
-            print(model)
+                print(model)
         }).start()
         
         return true
