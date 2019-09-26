@@ -55,6 +55,38 @@ class MovieApiService {
         case noData
         case decodeError
     }
+    private func fetchResources<T: Decodable>(url: URL) -> SignalProducer<(Result<T, APIServiceError>),Never> {
+        return SignalProducer { [weak self] sink,disposable in
+            guard let strongSelf = self else { return }
+            
+            guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+                sink.send(value: .failure(.invalidEndpoint))
+                return
+            }
+            
+            let queryItems = [URLQueryItem(name: "api_key", value: strongSelf.apiKey)]
+            urlComponents.queryItems = queryItems
+            guard let url = urlComponents.url else {
+                sink.send(value: .failure(.invalidEndpoint))
+                return
+            }
+            
+            strongSelf.urlSession.dataTask(with: url) { (data,response,error) in
+                guard let statusCode = (response as? HTTPURLResponse)?.statusCode, 200..<299 ~= statusCode else {
+                    sink.send(value: .failure(.invalidEndpoint))
+                    return
+                }
+                guard let data = data else { return }
+                
+                do {
+                    let values = try strongSelf.jsonDecoder.decode(T.self, from: data)
+                    sink.send(value: .success(values))
+                } catch {
+                    sink.send(value: .failure(.decodeError))
+                }
+                }.resume()
+        }
+    }
     
     private func fetchResources<T: Decodable>(url: URL, completion: @escaping (Result<T, APIServiceError>) -> Void) {
         guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
